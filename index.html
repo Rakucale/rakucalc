@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="ガソリン代・高速代・駐車場代・交通費・割り勘を別々に計算できる無料サイト。">
+  <meta name="theme-color" content="#ffffff">
+  <title>ラク算｜車のお金をかんたん計算</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="script.js" defer></script>
+</head>
+<body>
+  <header>
+    <a class="logo" href="#top"><span>ら</span>ラク算</a>
+    <a class="header-link" href="#tools">計算ツールを見る</a>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+      <p class="tag">無料・登録不要</p>
+      <h1>車のお金を、<br><em>かんたん計算。</em></h1>
+      <p>計算したいものを選んで、数字を入れるだけ。</p>
+      <a class="main-button" href="#tools">計算ツールを選ぶ</a>
+    </section>
+
+    <section class="tool-menu" id="tools" aria-labelledby="tools-title">
+      <h2 id="tools-title">何を計算しますか？</h2>
+      <div class="menu-grid">
+        <a href="#total"><b>🚗</b><span>車の交通費</span><small>費用をまとめる</small></a>
+        <a href="#gas"><b>⛽</b><span>ガソリン代</span><small>距離から計算</small></a>
+        <a href="#highway"><b>🛣️</b><span>高速代</span><small>往復料金を計算</small></a>
+        <a href="#parking"><b>🅿️</b><span>駐車場代</span><small>時間から計算</small></a>
+        <a href="#split"><b>👥</b><span>人数割り勘</span><small>1人分を計算</small></a>
+      </div>
+    </section>
+
+    <section class="calculators" aria-label="計算ツール一覧">
+      <article class="calculator" id="total">
+        <div class="tool-title"><span>🚗</span><div><p>TOOL 01</p><h2>車の交通費</h2><small>わかっている費用をまとめて合計します</small></div></div>
+        <form data-calculator="total" novalidate>
+          <div class="fields">
+            <label>ガソリン代<span><input name="gas" type="number" min="0" step="1" inputmode="numeric" placeholder="0"><b>円</b></span></label>
+            <label>高速代<span><input name="highway" type="number" min="0" step="1" inputmode="numeric" placeholder="0"><b>円</b></span></label>
+            <label>駐車場代<span><input name="parking" type="number" min="0" step="1" inputmode="numeric" placeholder="0"><b>円</b></span></label>
+            <label>その他の費用<span><input name="other" type="number" min="0" step="1" inputmode="numeric" placeholder="0"><b>円</b></span></label>
+          </div>
+          <p class="error" role="alert"></p><button type="submit">合計する</button>
+          <div class="result" hidden><span>交通費の合計</span><strong></strong><button type="button" class="copy">結果をコピー</button><small class="copy-status" role="status"></small></div>
+        </form>
+      </article>
+
+      <article class="calculator" id="gas">
+        <div class="tool-title"><span>⛽</span><div><p>TOOL 02</p><h2>ガソリン代</h2><small>走る距離と燃費から計算します</small></div></div>
+        <form data-calculator="gas" novalidate>
+          <fieldset><legend>移動</legend><label><input type="radio" name="trip" value="1"><span>片道</span></label><label><input type="radio" name="trip" value="2" checked><span>往復</span></label></fieldset>
+          <div class="fields three">
+            <label>片道の距離<span><input name="distance" type="number" min="0.1" step="0.1" inputmode="decimal" placeholder="例：100" required><b>km</b></span></label>
+            <label>車の燃費<span><input name="efficiency" type="number" min="0.1" step="0.1" inputmode="decimal" placeholder="例：15" required><b>km/L</b></span></label>
+            <label>ガソリン価格<span><input name="price" type="number" min="1" step="1" inputmode="numeric" placeholder="例：175" required><b>円/L</b></span></label>
+          </div>
+          <p class="formula">距離 ÷ 燃費 × ガソリン価格</p><p class="error" role="alert"></p><button type="submit">計算する</button>
+          <div class="result" hidden><span>ガソリン代</span><strong></strong><button type="button" class="copy">結果をコピー</button><small class="copy-status" role="status"></small></div>
+        </form>
+      </article>
+
+      <article class="calculator" id="highway">
+        <div class="tool-title"><span>🛣️</span><div><p>TOOL 03</p><h2>高速代</h2><small>片道料金から往復料金を計算します</small></div></div>
+        <form data-calculator="highway" novalidate>
+          <fieldset><legend>移動</legend><label><input type="radio" name="trip" value="1"><span>片道</span></label><label><input type="radio" name="trip" value="2" checked><span>往復</span></label></fieldset>
+          <div class="fields one"><label>片道の高速代<span><input name="fee" type="number" min="0" step="1" inputmode="numeric" placeholder="例：2500" required><b>円</b></span></label></div>
+          <p class="error" role="alert"></p><button type="submit">計算する</button>
+          <div class="result" hidden><span>高速代の合計</span><strong></strong><button type="button" class="copy">結果をコピー</button><small class="copy-status" role="status"></small></div>
+        </form>
+      </article>
+
+      <article class="calculator" id="parking">
+        <div class="tool-title"><span>🅿️</span><div><p>TOOL 04</p><h2>駐車場代</h2><small>時間料金と利用時間から計算します</small></div></div>
+        <form data-calculator="parking" novalidate>
+          <div class="fields">
+            <label>料金<span><input name="fee" type="number" min="0" step="1" inputmode="numeric" placeholder="例：200" required><b>円</b></span></label>
+            <label>何分ごと？<span><input name="unit" type="number" min="1" step="1" inputmode="numeric" placeholder="例：30" required><b>分</b></span></label>
+            <label>利用時間（時間）<span><input name="hours" type="number" min="0" step="1" inputmode="numeric" placeholder="例：2" required><b>時間</b></span></label>
+            <label>利用時間（分）<span><input name="minutes" type="number" min="0" max="59" step="1" inputmode="numeric" value="0" required><b>分</b></span></label>
+          </div>
+          <p class="formula">端数の時間は1回分として切り上げます</p><p class="error" role="alert"></p><button type="submit">計算する</button>
+          <div class="result" hidden><span>駐車場代</span><strong></strong><button type="button" class="copy">結果をコピー</button><small class="copy-status" role="status"></small></div>
+        </form>
+      </article>
+
+      <article class="calculator" id="split">
+        <div class="tool-title"><span>👥</span><div><p>TOOL 05</p><h2>人数割り勘</h2><small>合計金額を人数で均等に分けます</small></div></div>
+        <form data-calculator="split" novalidate>
+          <div class="fields">
+            <label>合計金額<span><input name="amount" type="number" min="0" step="1" inputmode="numeric" placeholder="例：10000" required><b>円</b></span></label>
+            <label>人数<span><input name="people" type="number" min="1" max="100" step="1" inputmode="numeric" value="2" required><b>人</b></span></label>
+          </div>
+          <p class="formula">1円未満は四捨五入します</p><p class="error" role="alert"></p><button type="submit">割り勘する</button>
+          <div class="result" hidden><span>1人あたり</span><strong></strong><small class="sub-result"></small><button type="button" class="copy">結果をコピー</button><small class="copy-status" role="status"></small></div>
+        </form>
+      </article>
+    </section>
+
+    <section class="faq">
+      <h2>よくある質問</h2>
+      <details><summary>すべて無料で使えますか？</summary><p>はい。無料・登録不要で、何度でも使えます。</p></details>
+      <details><summary>入力した数字は保存されますか？</summary><p>いいえ。入力内容は保存されず、外部へ送信されることもありません。</p></details>
+      <details><summary>計算結果は正確ですか？</summary><p>入力された数字をもとに計算します。実際の燃費や料金とは異なる場合があるため、目安としてご利用ください。</p></details>
+    </section>
+  </main>
+
+  <footer><a class="logo" href="#top"><span>ら</span>ラク算</a><p>暮らしの計算を、もっとラクに。</p><small>© <span id="year"></span> ラク算</small></footer>
+</body>
+</html>
