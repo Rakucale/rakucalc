@@ -1,86 +1,71 @@
-const yen = value => `${Math.round(value).toLocaleString('ja-JP')}円`;
-const value = (form, name) => Number(form.elements[name].value);
+const template = document.querySelector('#segment-template');
+const segments = document.querySelector('#segments');
+const yen = amount => `${Math.round(amount).toLocaleString('ja-JP')}円`;
 
-function fail(form, message) {
-  form.querySelector('.error').textContent = message;
-  form.querySelector('.result').hidden = true;
+function amount(card, name) {
+  const input = card.querySelector(`[name="${name}"]`);
+  const number = Number(input.value);
+  return Number.isFinite(number) && number > 0 ? number : 0;
 }
 
-function success(form, amount, label, sub = '') {
-  form.querySelector('.error').textContent = '';
-  const result = form.querySelector('.result');
-  result.querySelector('strong').textContent = yen(amount);
-  result.querySelector('.sub-result')?.replaceChildren(sub);
-  result.dataset.copyText = `【ラク算】${label}：${yen(amount)}${sub ? `（${sub}）` : ''}`;
-  result.hidden = false;
-  result.querySelector('.copy-status').textContent = '';
+function recalculate() {
+  let total = 0;
+  [...segments.children].forEach((card, index) => {
+    card.querySelector('.segment-number').textContent = `区間 ${index + 1}`;
+    card.querySelector('.remove').hidden = segments.children.length === 1;
+    const distance = amount(card, 'distance');
+    const efficiency = amount(card, 'efficiency');
+    const fuelPrice = amount(card, 'fuel-price');
+    const fuel = distance && efficiency && fuelPrice ? distance / efficiency * fuelPrice : 0;
+    const toll = amount(card, 'toll');
+    const extras = amount(card, 'parking') + amount(card, 'other');
+    const segmentCost = fuel + toll + extras;
+    card.querySelector('.fuel-cost').textContent = yen(fuel);
+    card.querySelector('.toll-cost').textContent = yen(toll);
+    card.querySelector('.extra-cost').textContent = yen(extras);
+    card.querySelector('.segment-cost').textContent = yen(segmentCost);
+    total += segmentCost;
+  });
+  document.querySelector('#grand-total').textContent = yen(total);
+  document.querySelector('#summary-total').textContent = yen(total);
+  document.querySelector('#summary-count').textContent = `${segments.children.length}区間`;
 }
 
-document.querySelectorAll('form[data-calculator]').forEach(form => {
-  form.addEventListener('submit', event => {
-    event.preventDefault();
-    const type = form.dataset.calculator;
-
-    if (type === 'total') {
-      const numbers = ['gas', 'highway', 'parking', 'other'].map(name => value(form, name) || 0);
-      if (numbers.some(number => number < 0)) return fail(form, '0以上の金額を入力してください。');
-      if (numbers.every(number => number === 0)) return fail(form, '費用を1つ以上入力してください。');
-      return success(form, numbers.reduce((sum, number) => sum + number, 0), '車の交通費');
-    }
-
-    if (type === 'gas') {
-      const distance = value(form, 'distance');
-      const efficiency = value(form, 'efficiency');
-      const price = value(form, 'price');
-      const trip = value(form, 'trip');
-      if (distance <= 0 || efficiency <= 0 || price <= 0) return fail(form, '距離・燃費・ガソリン価格を入力してください。');
-      return success(form, distance * trip / efficiency * price, 'ガソリン代');
-    }
-
-    if (type === 'highway') {
-      const fee = value(form, 'fee');
-      const trip = value(form, 'trip');
-      if (fee < 0 || form.elements.fee.value === '') return fail(form, '片道の高速代を入力してください。');
-      return success(form, fee * trip, '高速代の合計');
-    }
-
-    if (type === 'parking') {
-      const fee = value(form, 'fee');
-      const unit = value(form, 'unit');
-      const hours = value(form, 'hours');
-      const minutes = value(form, 'minutes');
-      if (fee < 0 || unit <= 0 || hours < 0 || minutes < 0 || minutes > 59 || [fee, unit, hours, minutes].some(Number.isNaN)) return fail(form, '料金・単位時間・利用時間を正しく入力してください。');
-      if (hours === 0 && minutes === 0) return fail(form, '利用時間を入力してください。');
-      return success(form, Math.ceil((hours * 60 + minutes) / unit) * fee, '駐車場代');
-    }
-
-    if (type === 'split') {
-      const amount = value(form, 'amount');
-      const people = value(form, 'people');
-      if (amount < 0 || form.elements.amount.value === '' || !Number.isInteger(people) || people < 1 || people > 100) return fail(form, '合計金額と1〜100人の人数を入力してください。');
-      return success(form, amount / people, '1人あたり', `${people}人で割り勘`);
-    }
+function addSegment() {
+  const fragment = template.content.cloneNode(true);
+  const card = fragment.querySelector('.segment');
+  card.addEventListener('input', recalculate);
+  card.querySelector('.remove').addEventListener('click', () => { card.remove(); recalculate(); });
+  card.querySelector('.map-search').addEventListener('click', () => {
+    const origin = card.querySelector('[name="origin"]').value.trim();
+    const waypoint = card.querySelector('[name="waypoint"]').value.trim();
+    const destination = card.querySelector('[name="destination"]').value.trim();
+    const message = card.querySelector('.route-message');
+    if (!origin || !destination) { message.textContent = '出発地と目的地を入力してください。'; return; }
+    const query = new URLSearchParams({ api: '1', origin, destination, travelmode: 'driving' });
+    if (waypoint) query.set('waypoints', waypoint);
+    window.open(`https://www.google.com/maps/dir/?${query.toString()}`, '_blank', 'noopener');
+    message.textContent = '地図を別タブで開きました。距離を確認して入力してください。';
   });
-});
+  segments.appendChild(fragment);
+  recalculate();
+}
 
-document.querySelectorAll('.copy').forEach(button => {
-  button.addEventListener('click', async () => {
-    const result = button.closest('.result');
-    try {
-      await navigator.clipboard.writeText(result.dataset.copyText);
-      result.querySelector('.copy-status').textContent = 'コピーしました。';
-    } catch {
-      const area = document.createElement('textarea');
-      area.value = result.dataset.copyText;
-      area.style.position = 'fixed';
-      area.style.opacity = '0';
-      document.body.appendChild(area);
-      area.select();
-      const copied = document.execCommand('copy');
-      area.remove();
-      result.querySelector('.copy-status').textContent = copied ? 'コピーしました。' : 'コピーできませんでした。';
-    }
-  });
+document.querySelector('#add-segment').addEventListener('click', addSegment);
+document.querySelector('#copy-total').addEventListener('click', async () => {
+  const text = `【ラク算｜交通費】\n${document.querySelector('#summary-count').textContent}の合計：${document.querySelector('#summary-total').textContent}`;
+  try { await navigator.clipboard.writeText(text); document.querySelector('#copy-status').textContent = 'コピーしました。'; }
+  catch {
+    const area = document.createElement('textarea');
+    area.value = text;
+    area.style.position = 'fixed';
+    area.style.opacity = '0';
+    document.body.appendChild(area);
+    area.select();
+    const copied = document.execCommand('copy');
+    area.remove();
+    document.querySelector('#copy-status').textContent = copied ? 'コピーしました。' : 'コピーできませんでした。';
+  }
 });
-
 document.querySelector('#year').textContent = new Date().getFullYear();
+addSegment();
